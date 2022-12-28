@@ -1,0 +1,29 @@
+library(DESeq2)
+library(edgeR)
+library(ggplot2)
+
+x <- read.delim("GVcounts_filtered.txt",row.names="Geneid")
+group <- factor(c(1,1,2,2))
+y <- DGEList(counts=x,group=group)
+keep <- filterByExpr(y, min.count = 0.5)
+y <- y[keep,,keep.lib.sizes=FALSE]
+readcounts <- y$counts
+group <- data.frame(con = factor(c("XO63R2", "XO63R2", "H18", "H18")))
+DESeq.ds <- DESeqDataSetFromMatrix(countData = readcounts, colData = group, design = ~ con)
+DESeq.ds <- estimateSizeFactors(DESeq.ds)
+dds <- DESeq(DESeq.ds)
+res<- results(dds)
+plotMA(res, alpha = 0.01, ylim = c(-7, 7))
+log.norm.counts <- log2(counts(DESeq.ds, normalized = TRUE) + 1)
+log1 <- log.norm.counts[,1:2]
+log2 <- log.norm.counts[,3:4]
+av1 <-rowMeans(log1)
+av2 <-rowMeans(log2)
+log3 <- cbind(av2, av1)
+plot(log3, cex=.1, main = "size factor and log2-transformed")
+res <- res[which(!(is.na(res$padj)  )),]
+res$uporDown <- 1
+res$uporDown[which(res$padj <= 0.01 & res$log2FoldChange >= 1)] <- 2
+res$uporDown[which(res$padj <= 0.01 & res$log2FoldChange <= -1)] <- 3
+final <- merge(log3, res, by ="row.names")
+plot(final$av2, final$av1, col = c("grey50", "red", "blue")[final$uporDown], pch =16, cex=.3)
