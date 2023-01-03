@@ -1,14 +1,16 @@
+# The data of XO and XX ESCs are from GSE 121299 (Hamada et al., 2020, PLoS Genet). 
+
 id = file name
 
-java -jar Trimmomatic-0.38/trimmomatic-0.38.jar SE -threads 8 -phred33 ${id}.fastq.gz ${id}.trim.fastq.gz ILLUMINACLIP:./Trimmomatic-0.38/adapters/NEBNext.fa:2:30:10 SLIDINGWINDOW:4:15 LEADING:20 TRAILING:20 MINLEN:30
+java -jar ./Trimmomatic-0.38/trimmomatic-0.38.jar SE -threads 8 -phred33 ${id}.fastq.gz ${id}.trim.fastq.gz ILLUMINACLIP:./Trimmomatic-0.38/adapters/NEBNext.fa:2:30:10 SLIDINGWINDOW:4:15 LEADING:20 TRAILING:20 MINLEN:30
 
 fastqc ${id}.trim.fastq.gz
 
-hisat2 -q -p 8 --dta -x ./RNAseq/mm10/genome -U ${id}.trim.fastq.gz | samtools sort -@8 -O BAM - > ${id}.sorted.bam
+hisat2 -q -p 8 --dta -x ./mm10/genome -U ${id}.trim.fastq.gz | samtools sort -@8 -O BAM - > ${id}.sorted.bam
 
 samtools index ${id}.sorted.bam
 
-# compiling files 
+# compiling files (GV oocytes, MII oocytes, XO and XX ESCs)
 
 featureCounts -T 8 -t exon -g gene_id -a gencode.vM24.annotation.gtf -o GVcounts.txt ${id1}sorted.bam ${id2}sorted.bam ${id3}sorted.bam ${id4}sorted.bam
 
